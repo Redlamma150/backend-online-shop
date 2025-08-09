@@ -17,6 +17,7 @@ public class OrderItemMapper implements RowMapper<OrderItem> {
         item.setUnitPrice(rs.getDouble("unit_price"));
         item.setTitle(rs.getString("title"));
         item.setImageUrl(rs.getString("image_url"));
+        item.setRemainingStock(rs.getInt("remaining_stock"));
         return item;
     }
 }

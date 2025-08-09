@@ -83,34 +83,36 @@ public class UserController {
         }
     }
 
-//    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @DeleteMapping
-    public ResponseEntity<String> deleteUser(@RequestHeader(value = "Authorization") String token) {
-        try {
-            String jwtToken = token.substring(7);
-            String username = jwtUtil.extractUsername(jwtToken);
-            CustomUser user = userService.getUserByUsername(username);
-            if (user == null) {
-                return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
-            }
-            Long userId = user.getId();
 
-            // 1. מחיקת פייבוריטים
-            favoriteService.removeAllFavoriteByUserId(userId);
-
-            // 2. מחיקת הזמנות
-            orderService.deleteOrdersByUserId(userId);
-
-            // 3. מחיקת המשתמש עצמו
-            String result = userService.deleteUser(username);
-            if (result.contains("successfully")) {
-                return new ResponseEntity(result, HttpStatus.OK);
-            }
-            return new ResponseEntity(result, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+@DeleteMapping
+public ResponseEntity<Void> deleteUser(@RequestHeader("Authorization") String auth) {
+    try {
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+        String username = jwtUtil.extractUsername(auth.substring(7));
+        CustomUser user = userService.getUserByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        Long userId = user.getId();
+
+        // 1) מחיקת פייבוריטים
+        favoriteService.removeAllFavoriteByUserId(userId);
+
+        // 2) מחיקת הזמנות TEMP בלבד (לא נוגע ב־CLOSE)
+        orderService.deleteTempOrdersByUserId(userId);
+
+        // 3) מחיקת המשתמש
+        userService.deleteUser(username);
+
+        return ResponseEntity.noContent().build(); // 204
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+}
+
+
 
     @PutMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestHeader("Authorization") String token,

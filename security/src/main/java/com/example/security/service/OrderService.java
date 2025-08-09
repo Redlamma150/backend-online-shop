@@ -14,56 +14,71 @@ public class OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    // הוספת פריט להזמנה זמנית של המשתמש
-    public String addItemToPendingOrder(Long userId, Long itemId) {
-        System.out.println(">>> addItemToPendingOrder: userId = " + userId + ", itemId = " + itemId);
+    // הוספת פריט להזמנה זמנית של המשתמש (+1)
+    public void addItemToPendingOrder(Long userId, Long itemId) {
         Long orderId = orderRepository.getTempOrderId(userId);
         if (orderId == null) {
-            System.out.println(">>> No TEMP order found, creating new...");
             orderId = orderRepository.createTempOrder(userId);
-            System.out.println(">>> Created new TEMP order with ID: " + orderId);
         }
-        String result = orderRepository.addItemToOrder(orderId, itemId);
-        System.out.println(">>> Result of addItemToOrder: " + result);
-        return result;
+        orderRepository.addItemToOrder(orderId, itemId);
     }
 
-    public String removeItemFromPendingOrder(Long userId, Long itemId) {
-        System.out.println(">>> removeItemFromPendingOrder: userId = " + userId + ", itemId = " + itemId);
+    // הפחתת כמות פריט אחד (−1). אם הכמות הייתה 1 → מחיקה מההזמנה; אם הזמנה התרוקנה → מחיקת TEMP
+    public void decreaseItemQuantityOrRemove(Long userId, Long itemId) {
         Long orderId = orderRepository.getTempOrderId(userId);
-        if (orderId == null) {
-            return "No pending order found.";
-        }
+        if (orderId == null) return;
 
-        String removeResult = orderRepository.removeItemFromOrder(orderId, itemId);
-        System.out.println(">>> Remove result: " + removeResult);
+        Integer qty = orderRepository.getItemQuantity(orderId, itemId);
+        if (qty == null) return;
+
+        if (qty > 1) {
+            orderRepository.decreaseItemQuantity(orderId, itemId);
+        } else {
+            orderRepository.removeItemFromOrder(orderId, itemId);
+            if (orderRepository.isOrderEmpty(orderId)) {
+                orderRepository.deleteTempOrderByUserId(userId); // מוחק TEMP בלבד
+            }
+        }
+    }
+
+    public Integer getItemRemaining(Long itemId) {
+        return orderRepository.getItemRemaining(itemId);
+    }
+
+    public Long getTempOrderId(Long userId) {
+        return orderRepository.getTempOrderId(userId);
+    }
+
+    // הסרת פריט מההזמנה (מחיקה מלאה של אותו פריט); אם הזמנה התרוקנה → מחיקת TEMP
+    public void removeItemFromPendingOrder(Long userId, Long itemId) {
+        Long orderId = orderRepository.getTempOrderId(userId);
+        if (orderId == null) return;
+
+        orderRepository.removeItemFromOrder(orderId, itemId);
 
         if (orderRepository.isOrderEmpty(orderId)) {
-            String deleteResult = orderRepository.deleteByUserId(userId);
-            System.out.println(">>> Order was empty, deleted: " + deleteResult);
-            return removeResult + " " + deleteResult;
+            orderRepository.deleteTempOrderByUserId(userId); // מוחק TEMP בלבד
         }
-
-        return removeResult;
     }
 
-    public String deleteOrdersByUserId(Long userId) {
-        return orderRepository.deleteByUserId(userId);
+    // ביטול מלא של הזמנת TEMP (ניקוי העגלה)
+    public void cancelTempOrder(Long userId) {
+        orderRepository.deleteTempOrderByUserId(userId); // מוחק TEMP בלבד
     }
-
 
     // סיום הזמנה זמנית - סוגר אותה ומעדכן כתובת וסכום סופי
     public String completeOrder(Long userId, String address) {
-
         Long orderId = orderRepository.getTempOrderId(userId);
         if (orderId == null) return "No pending order to complete";
 
         double totalPrice = orderRepository.calculateTotalPrice(orderId);
-        System.out.println(">>> Total price for order ID " + orderId + ": " + totalPrice);
 
+        // קודם מעדכנים מלאי לפי הכמויות שהוזמנו
+        orderRepository.applyStockForClosedOrder(orderId);
+
+        // ואז סוגרים את ההזמנה ל‑CLOSE
         return orderRepository.markOrderAsClosed(orderId, address, totalPrice);
     }
-
 
     // שליפת כל ההזמנות של המשתמש
     public List<Order> getOrdersByUserId(Long userId) {
@@ -79,5 +94,24 @@ public class OrderService {
     public Order getClosedOrder(Long orderId) {
         return orderRepository.getClosedOrderById(orderId);
     }
-}
 
+    // === מחיקות אופציונליות ===
+
+    // מחיקה גורפת של כל ההזמנות (TEMP + CLOSE)
+    public void deleteAllOrdersByUserId(Long userId) {
+        orderRepository.deleteAllOrdersByUserId(userId);
+    }
+
+    // מחיקה של הזמנות TEMP בלבד
+    public void deleteTempOrdersByUserId(Long userId) {
+        orderRepository.deleteTempOrderByUserId(userId);
+    }
+
+    // מחיקת הזמנה סגורה לפי מזהה, רק אם שייכת למשתמש
+    public void deleteClosedOrderById(Long userId, Long orderId) {
+        Long ownerId = orderRepository.getOrderOwnerIfClosed(orderId);
+        if (ownerId == null) return;           // אין הזמנה סגורה כזו
+        if (!ownerId.equals(userId)) return;   // לא שייך למשתמש
+        orderRepository.deleteClosedOrderById(orderId);
+    }
+}

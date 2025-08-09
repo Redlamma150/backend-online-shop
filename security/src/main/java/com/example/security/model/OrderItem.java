@@ -20,10 +20,13 @@ public class OrderItem {
     @JsonProperty("unit_price")
     private double unitPrice;
 
+    @JsonProperty("remaining_stock")
+    private int remainingStock;
+
     public OrderItem() {
     }
 
-    public OrderItem(Long id, Long orderId, Long itemId, String title, String imageUrl, int quantity, double unitPrice) {
+    public OrderItem(Long id, Long orderId, Long itemId, String title, String imageUrl, int quantity, double unitPrice, int remainingStock) {
         this.id = id;
         this.orderId = orderId;
         this.itemId = itemId;
@@ -31,6 +34,7 @@ public class OrderItem {
         this.imageUrl = imageUrl;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+        this.remainingStock = remainingStock;
     }
 
     public Long getId() {
@@ -89,5 +93,13 @@ public class OrderItem {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public int getRemainingStock() {
+        return remainingStock;
+    }
+
+    public void setRemainingStock(int remainingStock) {
+        this.remainingStock = remainingStock;
     }
 }

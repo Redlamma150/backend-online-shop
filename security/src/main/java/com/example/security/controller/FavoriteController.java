@@ -34,9 +34,13 @@ public class FavoriteController {
         try {
             Long userId = extractUserIdFromToken(token);
             String result = favoriteService.addFavorite(userId, itemId);
-            return result.contains("successfully") ?
-                    ResponseEntity.status(HttpStatus.CREATED).body(result) :
-                    ResponseEntity.badRequest().body(result);
+            if (result.contains("successfully")) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(result); // 201
+            } else if (result.toLowerCase().contains("already")) {
+                return ResponseEntity.ok(result); // 200 במקום 400
+            } else {
+                return ResponseEntity.badRequest().body(result); // כל השאר
+            }
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
@@ -55,15 +59,17 @@ public class FavoriteController {
         }
     }
 
+
     @DeleteMapping("/{itemId}")
     public ResponseEntity<String> removeFavorite(@RequestHeader("Authorization") String token,
                                                  @PathVariable Long itemId) {
         try {
             Long userId = extractUserIdFromToken(token);
             String result = favoriteService.removeFavorite(userId, itemId);
-            return result.contains("successfully") ?
-                    ResponseEntity.ok(result) :
-                    ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+            if (result.toLowerCase().contains("not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result); // 404
+            }
+            return ResponseEntity.ok(result); // 200
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -88,4 +94,3 @@ public class FavoriteController {
         return user.getId();
     }
 }
-

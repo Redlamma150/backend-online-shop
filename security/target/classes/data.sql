@@ -53,16 +53,16 @@ CREATE TABLE order_items (
 );
 
 INSERT INTO items (id, title, image_url, price, stock) VALUES
-(1, 'T-Shirt Classic White', 'https://imgur.com/4AsZ9Ja.jpg', 19.99, 50),
-(2, 'Running Shoes', 'https://imgur.com/phavlpF.jpg', 79.99, 30),
-(3, 'Sunglasses Aviator', 'https://imgur.com/err9MoG.jpg', 49.99, 20),
-(4, 'Backpack 25L', 'https://imgur.com/Fzdf2ZJ.jpg', 39.99, 15),
-(5, 'Wireless Earbuds', 'https://imgur.com/cUappqq.jpg', 59.99, 40),
-(6, 'Fitness Watch', 'https://imgur.com/pcOEu7o.jpg', 99.99, 25),
-(7, 'Baseball Cap', 'https://imgur.com/3m4HNMa.jpg', 14.99, 60),
-(8, 'Leather Wallet', 'https://imgur.com/WLXnLcy.jpg', 29.99, 18),
-(9, 'Gaming Mouse', 'https://imgur.com/oueHwhU.jpg', 44.99, 22),
-(10, 'Laptop Stand', 'https://imgur.com/VRWhGzl.jpg', 34.99, 27);
+(1, 'T-Shirt Classic White', 'https://imgur.com/4AsZ9Ja.png', 19.99, 50),
+(2, 'Running Shoes', 'https://imgur.com/phavlpF.png', 79.99, 30),
+(3, 'Sunglasses Aviator', 'https://imgur.com/err9MoG.png', 49.99, 20),
+(4, 'Backpack 25L', 'https://imgur.com/Fzdf2ZJ.png', 39.99, 15),
+(5, 'Wireless Earbuds', 'https://imgur.com/cUappqq.png', 59.99, 40),
+(6, 'Fitness Watch', 'https://imgur.com/pcOEu7o.png', 99.99, 25),
+(7, 'Baseball Cap', 'https://imgur.com/3m4HNMa.png', 14.99, 60),
+(8, 'Leather Wallet', 'https://imgur.com/WLXnLcy.png', 29.99, 18),
+(9, 'Gaming Mouse', 'https://imgur.com/oueHwhU.png', 44.99, 22),
+(10, 'Laptop Stand', 'https://imgur.com/VRWhGzl.png', 34.99, 27);
 
 
 INSERT INTO users (first_name, last_name, email, phone, address, username, password) VALUES
